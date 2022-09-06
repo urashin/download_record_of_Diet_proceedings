@@ -25,7 +25,7 @@ class SpeechSummary:
         self.updateTime = srecord_json["updateTime"]
         self.speechURL = srecord_json["speechURL"]
     def writeSpeechSummary(self, dir_name, filename_extention=".csv"):
-        with open(dir_name + "/speech/" +  self.year + filename_extention,'a') as f:
+        with open(dir_name + "/speech_" +  self.year + filename_extention,'a') as f:
             w_list = []
             w_list.append(str(self.issueID))
             if self.speechOrder == None:
@@ -68,7 +68,6 @@ class SpeechSummary:
                 w_list.append("")
             else:
                 w_list.append(self.speechURL)
-            #print("debug:" + str(w_list))
             f.write(",".join(w_list)+"\n")
     def showSpeechRecord(self):
         print(self.speechID + " [" + str(self.speechOrder) + "] / " + self.speaker + " / " + self.speech)
@@ -107,7 +106,7 @@ class MeetingRecord:
             self.speechRecords.append(speechRecord)
             self.speechSummaries.append(speechSummary)
     def writeMeetingRecord(self, dir_name, filename_extention=".txt"):
-        with open(dir_name + "/meeting/" +  self.filename + filename_extention,'a') as f:
+        with open(dir_name + "/meeting_" +  self.filename + filename_extention,'a') as f:
             w_list = []
             w_list.append(str(self.issueID))
             w_list.append(self.imageKind)
@@ -151,10 +150,6 @@ class MeetingManager:
     def __init__(self,dir_name):
         self.meeting_list = []
         self.dir_name = dir_name
-        os.makedirs(self.dir_name)
-        os.makedirs(self.dir_name + "/meeting/")
-        os.makedirs(self.dir_name + "/meeting_json/")
-        os.makedirs(self.dir_name + "/speech/")
     def getRecordOfDiet(self,url, params: dict):
         parameter = '?' + urllib.parse.quote('maximumRecords=10'
                                 + '&startRecord=' + str(params['startRecord'])
@@ -174,9 +169,16 @@ class MeetingManager:
         date_dt = dt.datetime.strptime(date_str, '%Y-%m-%d')
         year_str = date_dt.strftime('%Y')
         return year_str
+    def setDir(self,year_str):
+        self.dir_name += "/" + year_str
+        os.makedirs(self.dir_name)
+        #os.makedirs(self.dir_name + "/meeting/")
+        os.makedirs(self.dir_name + "/meeting_json/")
+        os.makedirs(self.dir_name + "/speech/")
     def getMeetings(self,start_date, days):
         end_date = self.getEndDate(start_date, days)
         year_str = self.getYear(start_date)
+        self.setDir(year_str)
         #
         url = 'http://kokkai.ndl.go.jp/api/1.0/meeting'
         ret_n = 1
@@ -200,7 +202,7 @@ class MeetingManager:
             total_n = response_json["numberOfRecords"]
             startRecord = next_pos
             time.sleep(2)
-            print("sleep 2min....")
+            print("[" + str(startRecord) + "/" + str(total_n) + "]  " + "sleep 2sec....")
     def showMeetings(self):
         for m in self.meeting_list:
             m.showMeetingRecord()
@@ -208,11 +210,11 @@ class MeetingManager:
 if __name__ == '__main__':
 
     # 開始日付の指定    
-    from_str = '2019-01-29'
+    from_str = '1959-01-01'
     # 何日後まで？
-    days=10
+    days=365
 
-    mm = MeetingManager("./dl/2019")
+    mm = MeetingManager("./dl")
     mm.getMeetings(from_str,days)
 #    mm.showMeetings()
 
